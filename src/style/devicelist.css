@@ -3,6 +3,14 @@
     --device-list-stripe-color: hsl(0, 0%, 96%);
     --device-list-default-color: hsl(0, 0%, 100%);
     --device-list-hover-color: hsl(218, 67%, 95%);
+    --device-card-bg: hsl(0, 0%, 100%);
+    --device-card-border: hsl(0, 0%, 85%);
+    --device-card-shadow: rgba(0, 0, 0, 0.1);
+    --device-card-hover-shadow: rgba(0, 0, 0, 0.15);
+    --screenshot-bg: hsl(0, 0%, 95%);
+    --android-icon-color: hsl(123, 43%, 39%);
+    --status-ready-color: hsl(123, 43%, 39%);
+    --status-stopped-color: hsl(0, 0%, 60%);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -11,6 +19,14 @@
         --device-list-stripe-color: hsl(0, 0%, 16%);
         --device-list-default-color: hsl(0, 0%, 14%);
         --device-list-hover-color: hsl(218, 17%, 18%);
+        --device-card-bg: hsl(0, 0%, 18%);
+        --device-card-border: hsl(0, 0%, 28%);
+        --device-card-shadow: rgba(0, 0, 0, 0.3);
+        --device-card-hover-shadow: rgba(0, 0, 0, 0.5);
+        --screenshot-bg: hsl(0, 0%, 12%);
+        --android-icon-color: hsl(123, 43%, 45%);
+        --status-ready-color: hsl(123, 43%, 45%);
+        --status-stopped-color: hsl(0, 0%, 50%);
     }
 }
 
@@ -22,7 +38,7 @@ body.list {
 }
 
 #devices {
-    padding: 20px 0;
+    padding: 20px;
     width: 100%;
     height: calc(100% - 40px);
     overflow-y: auto;
@@ -232,4 +248,180 @@ body.list #device_list_menu {
     padding: 5px 20px 5px;
     font-size: larger;
     font-weight: bolder;
+}
+
+/* Device Card Styles */
+#devices .device-list {
+    padding: 10px;
+}
+
+#devices .device-list > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+#devices .device-list > div > .tracker-name {
+    width: 100%;
+    flex-shrink: 0;
+}
+
+.device-card {
+    display: flex;
+    flex-direction: row;
+    width: 360px;
+    background-color: var(--device-card-bg);
+    border: 1px solid var(--device-card-border);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px var(--device-card-shadow);
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.device-card.active:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px var(--device-card-hover-shadow);
+}
+
+.device-card.not-active {
+    opacity: 0.6;
+}
+
+.device-card-screenshot {
+    width: 120px;
+    min-height: 160px;
+    background-color: var(--screenshot-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.device-card-screenshot img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.screenshot-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+.screenshot-placeholder .android-icon {
+    width: 64px;
+    height: 64px;
+    color: var(--android-icon-color);
+}
+
+.device-card-info {
+    flex: 1;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-width: 0;
+}
+
+.device-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.device-card-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-color);
+    line-height: 1.3;
+    word-wrap: break-word;
+}
+
+.device-card-state {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: red;
+    flex-shrink: 0;
+    margin-left: 8px;
+    margin-top: 4px;
+}
+
+.device-card.active .device-card-state {
+    background-color: var(--status-ready-color);
+}
+
+.device-card-details {
+    flex: 1;
+}
+
+.device-card-os {
+    margin-bottom: 4px;
+    font-size: 0.9rem;
+}
+
+.device-card-os .label {
+    color: var(--android-icon-color);
+    font-weight: 500;
+}
+
+.device-card-os .value {
+    color: var(--text-color);
+    font-weight: 600;
+    margin-left: 4px;
+}
+
+.device-card-os .sdk {
+    color: var(--text-color-light);
+    font-size: 0.8rem;
+    margin-left: 4px;
+}
+
+.device-card-serial {
+    font-size: 0.75rem;
+    color: var(--text-color-light);
+    font-family: monospace;
+    word-break: break-all;
+}
+
+.device-card-actions {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.device-card .interface-select {
+    flex: 1;
+    padding: 4px 8px;
+    border: 1px solid var(--device-border-color);
+    border-radius: 4px;
+    background-color: var(--device-card-bg);
+    color: var(--text-color);
+    font-size: 0.8rem;
+    cursor: pointer;
+    max-width: 140px;
+}
+
+.device-card .interface-select:hover {
+    border-color: var(--link-color);
+}
+
+.device-card-status {
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.device-card-status .status-ready {
+    color: var(--status-ready-color);
+}
+
+.device-card-status .status-stopped {
+    color: var(--status-stopped-color);
 }

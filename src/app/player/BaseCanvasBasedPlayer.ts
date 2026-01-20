@@ -20,6 +20,12 @@ export abstract class BaseCanvasBasedPlayer extends BasePlayer {
     protected animationFrameId?: number;
     protected canvas?: CanvasDecoder;
 
+    // Recording support
+    private mediaRecorder?: MediaRecorder;
+    private recordedChunks: Blob[] = [];
+    private _isRecording = false;
+    public readonly supportsRecording: boolean = true;
+
     public static hasWebGLSupport(): boolean {
         // For some reason if I use here `this.tag` image on canvas will be flattened
         const testCanvas: HTMLCanvasElement = document.createElement('canvas');
@@ -54,6 +60,69 @@ export abstract class BaseCanvasBasedPlayer extends BasePlayer {
         protected tag: HTMLCanvasElement = BaseCanvasBasedPlayer.createElement(),
     ) {
         super(udid, displayInfo, name, storageKeyPrefix, tag);
+    }
+
+    public get isRecording(): boolean {
+        return this._isRecording;
+    }
+
+    public startRecording(): boolean {
+        if (this._isRecording || !this.tag) {
+            return false;
+        }
+
+        try {
+            const stream = this.tag.captureStream(30);
+            const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+                ? 'video/webm;codecs=vp9'
+                : 'video/webm';
+
+            this.mediaRecorder = new MediaRecorder(stream, { mimeType });
+            this.recordedChunks = [];
+
+            this.mediaRecorder.ondataavailable = (event: BlobEvent) => {
+                if (event.data.size > 0) {
+                    this.recordedChunks.push(event.data);
+                }
+            };
+
+            this.mediaRecorder.onstop = () => {
+                this.downloadRecording();
+            };
+
+            this.mediaRecorder.start(100); // Collect data every 100ms
+            this._isRecording = true;
+            return true;
+        } catch (error) {
+            console.error('[BaseCanvasBasedPlayer] Failed to start recording:', error);
+            return false;
+        }
+    }
+
+    public stopRecording(): void {
+        if (!this._isRecording || !this.mediaRecorder) {
+            return;
+        }
+
+        this.mediaRecorder.stop();
+        this._isRecording = false;
+    }
+
+    private downloadRecording(): void {
+        if (this.recordedChunks.length === 0) {
+            return;
+        }
+
+        const blob = new Blob(this.recordedChunks, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `recording_${new Date().toISOString().replace(/[:.]/g, '-')}.webm`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        this.recordedChunks = [];
     }
 
     protected abstract decode(data: Uint8Array): void;
@@ -193,6 +262,9 @@ export abstract class BaseCanvasBasedPlayer extends BasePlayer {
 
     public stop(): void {
         super.stop();
+        if (this._isRecording) {
+            this.stopRecording();
+        }
         this.clearState();
     }
 

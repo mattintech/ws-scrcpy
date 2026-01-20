@@ -1,9 +1,13 @@
 import { ReadableOptions } from 'stream';
+import { spawn } from 'child_process';
+import * as os from 'os';
 import { CommandControlMessage, FilePushState } from '../../../app/controlMessage/CommandControlMessage';
 import { FilePushResponseStatus } from '../../../app/googDevice/filePush/FilePushResponseStatus';
 import PushTransfer from '@dead50f7/adbkit/lib/adb/sync/pushtransfer';
 import { ReadStream } from './ReadStream';
 import { AdbExtended } from '../adb';
+
+const OS_WINDOWS = os.platform() === 'win32';
 
 enum State {
     INITIAL,
@@ -209,14 +213,62 @@ export class FilePushReader {
         this.closeWithError(FilePushResponseStatus.ERROR_OTHER, error.message);
     };
 
-    private onPushEnd = () => {
+    private onPushEnd = async () => {
         if (this.state === State.FINISH) {
-            this.sendResponse(FilePushResponseStatus.NO_ERROR);
+            // Check if this is an APK file
+            if (this.fileName.toLowerCase().endsWith('.apk')) {
+                try {
+                    await this.installApk();
+                    this.sendResponse(FilePushResponseStatus.NO_ERROR);
+                } catch (error) {
+                    console.error(`[FilePushReader] APK install failed:`, error);
+                    // Still send success for the push, but log the install error
+                    this.sendResponse(FilePushResponseStatus.NO_ERROR);
+                }
+            } else {
+                this.sendResponse(FilePushResponseStatus.NO_ERROR);
+            }
             this.release();
         } else {
             this.closeWithError(FilePushResponseStatus.ERROR_INVALID_STATE);
         }
     };
+
+    private async installApk(): Promise<void> {
+        console.log(`[FilePushReader] Installing APK: ${this.fileName}`);
+
+        return new Promise((resolve, reject) => {
+            const adbPath = OS_WINDOWS ? 'adb.exe' : 'adb';
+            const installProcess = spawn(adbPath, ['-s', this.serial, 'shell', 'pm', 'install', '-r', this.fileName]);
+
+            let result = '';
+            let errorOutput = '';
+
+            installProcess.stdout.on('data', (data: Buffer) => {
+                result += data.toString();
+            });
+
+            installProcess.stderr.on('data', (data: Buffer) => {
+                errorOutput += data.toString();
+            });
+
+            installProcess.on('close', (code: number) => {
+                if (code === 0 && result.includes('Success')) {
+                    console.log(`[FilePushReader] APK installed successfully: ${this.fileName}`);
+                    resolve();
+                } else {
+                    const errorMsg = result.trim() || errorOutput.trim() || `Install failed with code ${code}`;
+                    console.error(`[FilePushReader] APK install failed: ${errorMsg}`);
+                    reject(new Error(errorMsg));
+                }
+            });
+
+            installProcess.on('error', (error: Error) => {
+                console.error(`[FilePushReader] APK install process error:`, error);
+                reject(error);
+            });
+        });
+    }
 
     private onPushCancel = () => {
         if (this.state === State.CANCEL) {

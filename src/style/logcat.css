@@ -1,0 +1,189 @@
+/* Logcat Panel Styles */
+.logcat-panel {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 400px;
+    background-color: var(--controls-bg-color);
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+    border-right: 1px solid var(--button-border-color);
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 12px;
+}
+
+.logcat-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    padding: 8px;
+    background-color: var(--header-bg-color);
+    border-bottom: 1px solid var(--button-border-color);
+}
+
+.logcat-filter-input {
+    flex: 1;
+    min-width: 150px;
+    padding: 6px 10px;
+    border: 1px solid var(--button-border-color);
+    border-radius: 4px;
+    background-color: var(--main-bg-color);
+    color: var(--text-color);
+    font-size: 12px;
+}
+
+.logcat-filter-input:focus {
+    outline: none;
+    border-color: var(--link-color);
+}
+
+.logcat-level-select {
+    padding: 6px;
+    border: 1px solid var(--button-border-color);
+    border-radius: 4px;
+    background-color: var(--main-bg-color);
+    color: var(--text-color);
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.logcat-btn {
+    padding: 6px 12px;
+    border: 1px solid var(--button-border-color);
+    border-radius: 4px;
+    background-color: var(--main-bg-color);
+    color: var(--text-color);
+    font-size: 12px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.logcat-btn:hover {
+    background-color: var(--header-bg-color);
+}
+
+.logcat-btn-active {
+    background-color: var(--svg-checkbox-bg-color);
+    color: white;
+    border-color: var(--svg-checkbox-bg-color);
+}
+
+.logcat-logs {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 4px;
+    background-color: var(--main-bg-color);
+}
+
+.logcat-line {
+    display: flex;
+    gap: 6px;
+    padding: 2px 4px;
+    border-bottom: 1px solid var(--button-border-color);
+    word-break: break-word;
+}
+
+.logcat-line:hover {
+    background-color: var(--header-bg-color);
+}
+
+.logcat-timestamp {
+    color: var(--text-color-light);
+    flex-shrink: 0;
+    font-size: 11px;
+    min-width: 100px;
+}
+
+.logcat-level {
+    font-weight: bold;
+    flex-shrink: 0;
+    width: 14px;
+    text-align: center;
+}
+
+.logcat-tag {
+    color: var(--link-color);
+    flex-shrink: 0;
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.logcat-message {
+    flex: 1;
+    color: var(--text-color);
+    word-break: break-word;
+}
+
+/* Log level colors */
+.logcat-level-v .logcat-level {
+    color: var(--text-color-light);
+}
+
+.logcat-level-d .logcat-level {
+    color: hsl(210, 80%, 50%);
+}
+
+.logcat-level-i .logcat-level {
+    color: hsl(120, 60%, 40%);
+}
+
+.logcat-level-w .logcat-level {
+    color: hsl(45, 100%, 40%);
+}
+
+.logcat-level-w {
+    background-color: hsla(45, 100%, 50%, 0.1);
+}
+
+.logcat-level-e .logcat-level {
+    color: hsl(0, 80%, 50%);
+}
+
+.logcat-level-e {
+    background-color: hsla(0, 100%, 50%, 0.1);
+}
+
+.logcat-level-f .logcat-level {
+    color: hsl(300, 80%, 40%);
+}
+
+.logcat-level-f {
+    background-color: hsla(300, 100%, 50%, 0.1);
+}
+
+/* Resize handle for panel */
+.logcat-panel::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    cursor: ew-resize;
+    background: transparent;
+}
+
+.logcat-panel::after:hover {
+    background-color: var(--link-color);
+}
+
+/* Responsive adjustments */
+@media (max-width: 800px) {
+    .logcat-panel {
+        width: 300px;
+    }
+}
+
+/* Animation for panel show/hide */
+.logcat-panel {
+    transition: transform 0.3s ease;
+}
+
+.logcat-panel-hidden {
+    transform: translateX(-100%);
+}

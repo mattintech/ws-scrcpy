@@ -53,6 +53,11 @@ async function loadGoogModules() {
     mw2List.push(FileListing);
     /// #endif
 
+    /// #if INCLUDE_LOGCAT
+    const { RemoteLogcat } = await import('./goog-device/mw/RemoteLogcat');
+    mw2List.push(RemoteLogcat);
+    /// #endif
+
     mwList.push(WebsocketProxyOverAdb);
 }
 loadPlatformModulesPromises.push(loadGoogModules());

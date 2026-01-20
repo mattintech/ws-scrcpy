@@ -15,6 +15,10 @@ import MenuSVG from '../../public/images/buttons/menu.svg';
 import ArrowBackSVG from '../../public/images/buttons/arrow_back.svg';
 import ToggleOnSVG from '../../public/images/buttons/toggle_on.svg';
 import ToggleOffSVG from '../../public/images/buttons/toggle_off.svg';
+import RecordSVG from '../../public/images/buttons/record.svg';
+import StopSVG from '../../public/images/buttons/stop.svg';
+import ApkSVG from '../../public/images/buttons/apk.svg';
+import LogcatSVG from '../../public/images/buttons/logcat.svg';
 
 export enum Icon {
     BACK,
@@ -34,6 +38,10 @@ export enum Icon {
     ARROW_BACK,
     TOGGLE_ON,
     TOGGLE_OFF,
+    RECORD,
+    STOP,
+    APK,
+    LOGCAT,
 }
 
 export default class SvgImage {
@@ -74,6 +82,14 @@ export default class SvgImage {
                 return ToggleOnSVG;
             case Icon.TOGGLE_OFF:
                 return ToggleOffSVG;
+            case Icon.RECORD:
+                return RecordSVG;
+            case Icon.STOP:
+                return StopSVG;
+            case Icon.APK:
+                return ApkSVG;
+            case Icon.LOGCAT:
+                return LogcatSVG;
             default:
                 return '';
         }

@@ -5,8 +5,19 @@ import { KeyCodeControlMessage } from '../../controlMessage/KeyCodeControlMessag
 import { ToolBoxButton } from '../../toolbox/ToolBoxButton';
 import { ToolBoxElement } from '../../toolbox/ToolBoxElement';
 import { ToolBoxCheckbox } from '../../toolbox/ToolBoxCheckbox';
+import { ToolBoxSelect } from '../../toolbox/ToolBoxSelect';
 import { StreamClientScrcpy } from '../client/StreamClientScrcpy';
 import { BasePlayer } from '../../player/BasePlayer';
+import { BaseCanvasBasedPlayer } from '../../player/BaseCanvasBasedPlayer';
+
+const SCALE_OPTIONS = [
+    { value: '0.5', label: '50%' },
+    { value: '0.75', label: '75%' },
+    { value: '1', label: '100%' },
+    { value: '1.25', label: '125%' },
+    { value: '1.5', label: '150%' },
+    { value: '2', label: '200%' },
+];
 
 const BUTTONS = [
     {
@@ -51,6 +62,7 @@ export class GoogToolBox extends ToolBox {
         player: BasePlayer,
         client: StreamClientScrcpy,
         moreBox?: HTMLElement,
+        deviceView?: HTMLElement,
     ): GoogToolBox {
         const playerName = player.getName();
         const list = BUTTONS.slice();
@@ -82,6 +94,53 @@ export class GoogToolBox extends ToolBox {
             elements.push(screenshot);
         }
 
+        // Video recording button (only for canvas-based players)
+        if (player instanceof BaseCanvasBasedPlayer && player.supportsRecording) {
+            const recordBtn = new ToolBoxButton('Record video', SvgImage.Icon.RECORD);
+            const btnElement = recordBtn.getElement();
+            recordBtn.addEventListener('click', () => {
+                const canvasPlayer = player as BaseCanvasBasedPlayer;
+                if (canvasPlayer.isRecording) {
+                    canvasPlayer.stopRecording();
+                    btnElement.style.color = '';
+                    btnElement.title = 'Record video';
+                    // Update icon back to record
+                    btnElement.innerHTML = '';
+                    btnElement.appendChild(SvgImage.create(SvgImage.Icon.RECORD));
+                } else {
+                    if (canvasPlayer.startRecording()) {
+                        btnElement.style.color = 'hsl(0, 100%, 50%)';
+                        btnElement.title = 'Stop recording';
+                        // Update icon to stop
+                        btnElement.innerHTML = '';
+                        btnElement.appendChild(SvgImage.create(SvgImage.Icon.STOP));
+                    }
+                }
+            });
+            elements.push(recordBtn);
+        }
+
+        // APK install button
+        const apkBtn = new ToolBoxButton('Install APK', SvgImage.Icon.APK);
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = '.apk';
+        fileInput.style.display = 'none';
+        fileInput.addEventListener('change', () => {
+            const files = fileInput.files;
+            if (files && files.length > 0) {
+                const file = files[0];
+                // Trigger file push through the existing drag-and-drop handler
+                const event = new CustomEvent('apk-install', { detail: { file } });
+                document.dispatchEvent(event);
+            }
+            fileInput.value = ''; // Reset for next selection
+        });
+        apkBtn.addEventListener('click', () => {
+            fileInput.click();
+        });
+        elements.push(apkBtn);
+
         const keyboard = new ToolBoxCheckbox(
             'Capture keyboard',
             SvgImage.Icon.KEYBOARD,
@@ -92,6 +151,28 @@ export class GoogToolBox extends ToolBox {
             client.setHandleKeyboardEvents(element.checked);
         });
         elements.push(keyboard);
+
+        // Logcat toggle button
+        const logcatBtn = new ToolBoxCheckbox('Toggle Logcat', SvgImage.Icon.LOGCAT, `logcat_${udid}_${playerName}`);
+        logcatBtn.addEventListener('click', () => {
+            const event = new CustomEvent('toggle-logcat');
+            document.dispatchEvent(event);
+        });
+        elements.push(logcatBtn);
+
+        // Scale dropdown
+        const scaleSelect = new ToolBoxSelect('Display Scale', SCALE_OPTIONS, '1');
+        scaleSelect.addEventListener('change', () => {
+            const scale = parseFloat(scaleSelect.getValue());
+            if (deviceView) {
+                const videoEl = deviceView.querySelector('.video') as HTMLElement;
+                if (videoEl) {
+                    videoEl.style.transform = scale === 1 ? '' : `scale(${scale})`;
+                    videoEl.style.transformOrigin = 'top right';
+                }
+            }
+        });
+        elements.push(scaleSelect);
 
         if (moreBox) {
             const displayId = player.getVideoSettings().displayId;

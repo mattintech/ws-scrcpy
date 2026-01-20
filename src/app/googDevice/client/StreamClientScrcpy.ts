@@ -30,6 +30,7 @@ import { ACTION } from '../../../common/Action';
 import { StreamReceiverScrcpy } from './StreamReceiverScrcpy';
 import { ParamsDeviceTracker } from '../../../types/ParamsDeviceTracker';
 import { ScrcpyFilePushStream } from '../filePush/ScrcpyFilePushStream';
+import { LogcatPanel } from '../toolbox/LogcatPanel';
 
 type StartParams = {
     udid: string;
@@ -60,6 +61,7 @@ export class StreamClientScrcpy
     private filePushHandler?: FilePushHandler;
     private fitToScreen?: boolean;
     private readonly streamReceiver: StreamReceiverScrcpy;
+    private logcatPanel?: LogcatPanel;
 
     public static registerPlayer(playerClass: PlayerClass): void {
         if (playerClass.isSupported()) {
@@ -315,7 +317,7 @@ export class StreamClientScrcpy
         const googMoreBox = (this.moreBox = new GoogMoreBox(udid, player, this));
         const moreBox = googMoreBox.getHolderElement();
         googMoreBox.setOnStop(stop);
-        const googToolBox = GoogToolBox.createToolBox(udid, player, this, moreBox);
+        const googToolBox = GoogToolBox.createToolBox(udid, player, this, moreBox, deviceView);
         this.controlButtons = googToolBox.getHolderElement();
         deviceView.appendChild(this.controlButtons);
         const video = document.createElement('div');
@@ -337,6 +339,36 @@ export class StreamClientScrcpy
         const logger = new DragAndPushLogger(element);
         this.filePushHandler = new FilePushHandler(element, new ScrcpyFilePushStream(this.streamReceiver));
         this.filePushHandler.addEventListener(logger);
+
+        // Handle APK install button events
+        const apkInstallHandler = (event: Event) => {
+            const customEvent = event as CustomEvent<{ file: File }>;
+            if (customEvent.detail && customEvent.detail.file && this.filePushHandler) {
+                this.filePushHandler.onFilesDrop([customEvent.detail.file]);
+            }
+        };
+        document.addEventListener('apk-install', apkInstallHandler);
+
+        // Create logcat panel
+        this.logcatPanel = new LogcatPanel(udid, this.params);
+        document.body.appendChild(this.logcatPanel.getElement());
+
+        // Handle logcat toggle events
+        const logcatToggleHandler = () => {
+            this.logcatPanel?.toggle();
+        };
+        document.addEventListener('toggle-logcat', logcatToggleHandler);
+
+        // Clean up the event listener when stream is stopped
+        const originalStop = stop;
+        const newStop = (ev?: string | Event) => {
+            document.removeEventListener('apk-install', apkInstallHandler);
+            document.removeEventListener('toggle-logcat', logcatToggleHandler);
+            this.logcatPanel?.release();
+            this.logcatPanel = undefined;
+            originalStop(ev);
+        };
+        googMoreBox.setOnStop(newStop);
 
         const streamReceiver = this.streamReceiver;
         streamReceiver.on('deviceMessage', this.OnDeviceMessage);
